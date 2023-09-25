@@ -10,6 +10,8 @@ MongoDB
 
 PostGresql
 
+Streamlit
+
 # Skills Covered
 
 Python Scripting
@@ -22,6 +24,7 @@ SQL
 
 MongoDB
 
+Streamlit 
 
 Explanation To Do Execute The Project*
 
