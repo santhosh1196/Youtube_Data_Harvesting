@@ -7,9 +7,8 @@ import pymongo
 import psycopg2
 import isodate
 
-
 api_key = 'AIzaSyBPiSMJ9CbfFfeNHELifr62u34wlGs-oww'
-channel_id = 'UCG0m9a2z1ziRm2YlaFuyU7A' #Today Trending
+#channel_id = 'UCG0m9a2z1ziRm2YlaFuyU7A' #Today Trending
 
 youtube = build('youtube', 'v3', developerKey=api_key)
 
@@ -49,62 +48,62 @@ def Video_ID(Playlists_ID):
 
 
 def video_details(video_ids):
-    video_details =[]
-    
-    request = youtube.videos().list(part='snippet,statistics,contentDetails',id=video_ids)
-    video_data = request.execute()
-    for i in video_data['items']:
-        video_information = {
-                                'Video_Id': video_ids,
-                                'channel_id' : i["snippet"]["channelId"],
-                                'channel_name' : i["snippet"]["channelTitle"],
-                                'Video_Name': i['snippet']['title'] if 'title' in video_data['items'][0]['snippet'] else "Not Available",
-                                'Video_Description': i['snippet']['description'],
-                                'Published_At': i['snippet']['publishedAt'],
-                                'video_duration' :duration(i["contentDetails"]["duration"]),
-                                'View_count': i['statistics']['viewCount'],
-                                'Like_count': i['statistics']['likeCount'],
-                                'Comment_Count': i['statistics']['commentCount'],
-                                'Favorite_Count': i['statistics']['favoriteCount'],
-                                'Dislike_count': i['statistics']['dislikeCount'] if "dislikeCount" in video_data['items'][0]['statistics'] else "Not Available"}      
-        video_details.append(video_information)  
-    return video_details
+    v_details =[]
+    for j in video_ids:
 
-        
+        request = youtube.videos().list(part='snippet,statistics,contentDetails',id=j)
+        video_data = request.execute()
+        for i in video_data['items']:
+            video_information = {
+                                    'Video_Id': j,
+                                    'channel_id' : i["snippet"]["channelId"],
+                                    'channel_name' : i["snippet"]["channelTitle"],
+                                    'Video_Name': i['snippet']['title'] if 'title' in video_data['items'][0]['snippet'] else "Not Available",
+                                    'Video_Description': i['snippet']['description'],
+                                    'Published_At': i['snippet']['publishedAt'],
+                                    'video_duration' :duration(i["contentDetails"]["duration"]),
+                                    'View_count': i['statistics']['viewCount'],
+                                    'Like_count': i['statistics']['likeCount'],
+                                    'Comment_Count': i['statistics']['commentCount'],
+                                    'Favorite_Count': i['statistics']['favoriteCount'],
+                                    'Dislike_count': i['statistics']['dislikeCount'] if "dislikeCount" in video_data['items'][0]['statistics'] else 0
+                                    }      
+            v_details.append(video_information)  
+    return v_details
 
 def comment_details(video_ids):
     comments = []
     for i in video_ids:
         com_request = youtube.commentThreads().list(part="snippet,replies", videoId=i)
         comments_data = com_request.execute()
-        for i in comments_data['items']:
-            comment_information = {'Comment_Id':i["id"],
-                            'Comment_Author':i["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"],
-                            'Comment_Text':i["snippet"]["topLevelComment"]["snippet"]["textDisplay"],
-                            'Comment_PublishedAt':i["snippet"]["topLevelComment"]["snippet"]["publishedAt"],
-                            'Video_Id':i["snippet"]["topLevelComment"]["snippet"]["videoId"],
-                            'Rating':i["snippet"]["topLevelComment"]["snippet"]["viewerRating"],
-                            'Comment_ch_id': i["snippet"]["topLevelComment"]["snippet"]["authorChannelId"],
-                            'Comment_like_count':i["snippet"]["topLevelComment"]["snippet"] ["likeCount"],
-                            'Comment_Reply_count':i["snippet"]["totalReplyCount"]}
+        for j in comments_data['items']:
+            comment_information = {'Comment_Id':j["id"],
+                            'Comment_Author':j["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"],
+                            'Comment_Text':j["snippet"]["topLevelComment"]["snippet"]["textDisplay"],
+                            'Comment_PublishedAt':j["snippet"]["topLevelComment"]["snippet"]["publishedAt"],
+                            'Video_Id':j["snippet"]["topLevelComment"]["snippet"]["videoId"],
+                            'Rating':j["snippet"]["topLevelComment"]["snippet"]["viewerRating"],
+                            'Comment_ch_id': j["snippet"]["topLevelComment"]["snippet"]["authorChannelId"],
+                            'Comment_like_count':j["snippet"]["topLevelComment"]["snippet"] ["likeCount"],
+                            'Comment_Reply_count':j["snippet"]["totalReplyCount"]}
          
             comments.append(comment_information)
     return comments
 
 
-client = pymongo.MongoClient("mongodb+srv://Santhosh_Kumar:Tn22ak7588@santhosh.foxesxo.mongodb.net/?retryWrites=true&w=majority")
+client = pymongo.MongoClient("mongodb+srv://Santhosh_Kumar:San123@santhosh.foxesxo.mongodb.net/?retryWrites=true&w=majority")
 db = client["Youtube_Project"]
 col = db["Channel_Details"]
 
 
 def mongo_data(input):
     channel_data= channel_details(input)
-    playlist_ID = Video_ID(channel_data['Playlists_ID'])
-    video_data= video_details(playlist_ID)
-    comment_data = comment_details(playlist_ID)
+    v_ids = Video_ID(channel_data['Playlists_ID'])
+    video_data= video_details(v_ids)
+    comment_data = comment_details(v_ids)
     data = {'Channel_Details' :channel_data,
-            'Video_ID': playlist_ID,
-            'Video_details': video_data,
+            'Video_ID': v_ids,
+            'Video_Details': video_data,
             'Comment_Details': comment_data
            }
     col.insert_one(data)
@@ -112,20 +111,20 @@ def mongo_data(input):
 
 
 
-client = pymongo.MongoClient("mongodb+srv://Santhosh_Kumar:Tn22ak7588@santhosh.foxesxo.mongodb.net/?retryWrites=true&w=majority")
+client = pymongo.MongoClient("mongodb+srv://Santhosh_Kumar:San123@santhosh.foxesxo.mongodb.net/?retryWrites=true&w=majority")
     
-db = psycopg2.connect(host='localhost', user='postgres', password='Sandy@20', port=5432, database='guvi')
+db = psycopg2.connect(host='localhost', user='postgres', password='Sandy@20', port=5432, database='Youtube')
 feed = db.cursor()
 
 
 def retrive(data):
 
-    client = pymongo.MongoClient("mongodb+srv://Santhosh_Kumar:Tn22ak7588@santhosh.foxesxo.mongodb.net/?retryWrites=true&w=majority")
+    client = pymongo.MongoClient("mongodb+srv://Santhosh_Kumar:San123@santhosh.foxesxo.mongodb.net/?retryWrites=true&w=majority")
     
-    db = psycopg2.connect(host='localhost', user='postgres', password='Sandy@20', port=5432, database='guvi')
+    db = psycopg2.connect(host='localhost', user='postgres', password='Sandy@20', port=5432, database='Youtube')
     feed = db.cursor()
 
-    feed.execute("""create table if not exists channel(
+    feed.execute("""create table if not exists channel_table(
     Channel_ID varchar unique,
     Channel_Name text,
     Subscription_Count int,
@@ -136,7 +135,7 @@ def retrive(data):
     db.commit()
 
                  
-    feed.execute("""create table if not exists video (
+    feed.execute("""create table if not exists video_table (
     Video_Id varchar unique,
     channel_id varchar,
     channel_name text,
@@ -151,7 +150,7 @@ def retrive(data):
     Dislike_count int)""")
     db.commit()
 
-    feed.execute("""create table if not exists comment (
+    feed.execute("""create table if not exists comment_table (
     Comment_Id varchar unique,
     Comment_Author text,
     Comment_Text text,
@@ -163,41 +162,48 @@ def retrive(data):
     Comment_Reply_count int)""")
     db.commit()
 
-
-    channel_data = client["Youtube_Project"]["Channel_Details"].find_one({'channel_data.Channel_Name': data}, {"_id": 0})
-
-    
+    col1 = client["Youtube_Project"]["Channel_Details"]
+    channel_data = col1.find_one({'Channel_Details.Channel_Name': data},{"_id": 0})
     try:
-        feed.execute("INSERT INTO channel VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",
-                    (channel_data['channel']['Channel_ID'],channel_data['channel']['Channel_Name'], channel_data['channel']['Subscription_Count'],
-                    channel_data['channel']['Channel_views'], channel_data['channel']['Channel_Videos'], channel_data['channel']['Channel_Description'],
-                    channel_data['channel']['Playlists_ID']))
-        
-
-        db.commit()
-
-        for vd in channel_data['Video_details']:
-            feed.execute("INSERT INTO video VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                            (vd['Video_Id'], vd['channel_id'],
-                                vd['channel_name'], vd['Video_Name'],
-                                vd['Video_Description'], vd['Published_At'],
-                                vd['video_duration'], vd['View_count'],
-                                vd['Like_count'], vd['Comment_Count'],
-                                vd['Favorite_Count'], vd['Dislike_count']))
-            db.commit()
-            for cd in channel_data['Comment_details']:
-                feed.execute("INSERT INTO comment VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",
-                            (cd['Comment_Author'], cd['Comment_Text'],
-                            cd['Comment_PublishedAt'], cd['Video_Id'],
-                            cd['Rating'], cd['Comment_ch_id'], cd['Comment_like_count'], cd['Comment_Reply_count']))
+        feed.execute("INSERT INTO channel_table VALUES(%s,%s,%s,%s,%s,%s,%s)",
+                            (channel_data['Channel_Details']['Channel_ID'],channel_data['Channel_Details']['Channel_Name'], channel_data['Channel_Details']['Subscription_Count'],
+                        channel_data['Channel_Details']['Channel_views'], channel_data['Channel_Details']['Channel_Videos'], channel_data['Channel_Details']['Channel_Description'],
+                            channel_data['Channel_Details']['Playlists_ID']));
+        try:
                 db.commit()
-            st.success("Data Migrated Succesfully to SQL Database.")
+        except:
+                db.rollback()
+        for i in channel_data['Video_Details']:
+            feed.execute("INSERT INTO video_table VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                                    (i['Video_Id'], i['channel_id'],
+                                        i['channel_name'], i['Video_Name'],
+                                        i['Video_Description'], i['Published_At'],
+                                        i['video_duration'], i['View_count'],
+                                        i['Like_count'], i['Comment_Count'],
+                                        i['Favorite_Count'], i['Dislike_count']));
+            try:
+                db.commit()
+            except:
+                db.rollback()
+
+
+        for j in channel_data['Comment_Details']:
+            feed.execute("INSERT INTO comment_table VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                                    (j['Comment_Id'],j['Comment_Author'], j['Comment_Text'],
+                                    j['Comment_PublishedAt'], j['Video_Id'],
+                                    j['Rating'], j['Comment_ch_id']['value'], 
+                                    j['Comment_like_count'], j['Comment_Reply_count']));
+            try:
+                db.commit()
+            except:
+                db.rollback()
+        st.success("Data Migrated to SQL")
     except:
         st.error("Data Already Exists")
 
 def Store():
      chanelname =[]
-     client = pymongo.MongoClient("mongodb+srv://Santhosh_Kumar:Tn22ak7588@santhosh.foxesxo.mongodb.net/?retryWrites=true&w=majority")
+     client = pymongo.MongoClient("mongodb+srv://Santhosh_Kumar:San123@santhosh.foxesxo.mongodb.net/?retryWrites=true&w=majority")
      for i in client["Youtube_Project"]["Channel_Details"].find():
          chanelname.append(i["Channel_Details"]["Channel_Name"])
      return chanelname
@@ -206,22 +212,22 @@ def Store():
 def answers(data):
     if data == "Visualisation of video names along with their channel name":
         try:
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select channel_name ,Video_Name from video")
+            exe.execute("select Video_Name ,channel_name from video_table")
             result = exe.fetchall()
             res = []
             for i in result:
                 res.append(i)
-            st.dataframe(res,width= 5000,column_config=({1:"channel_name",2:"Video_Name"}))
+            st.dataframe(res,width= 5000,column_config=({1:"Video_Name",2:"channel_name"}))
         except:
             st.text("Error executing SQL query")
 
     if data == "Visualisation of channels that have most number of videos along with their video count":
         try:
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select Channel_Name ,Channel_Videos from channel order by Channel_Videos desc limit 5 ")
+            exe.execute("select Channel_Name ,Channel_Videos from channel_table order by Channel_Videos desc limit 5 ")
             result = exe.fetchall()
             res = []
             for i in result:
@@ -232,9 +238,9 @@ def answers(data):
     
     if data == "Visualisation of top 10 most viewed videos and their respective channels":
         try:
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select Video_Name ,View_count from video order by View_count desc limit 10 ")
+            exe.execute("select Video_Name ,View_count from video_table order by View_count desc limit 10 ")
             result = exe.fetchall()
             res = []
             for i in result:
@@ -245,9 +251,9 @@ def answers(data):
     
     if data == "Visualisation of no of comments made on each video along with their corresponding video names":
         try:
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select channel_name ,Video_Name , Comment_Count from video order by channel_name, Video_Name ")
+            exe.execute("select channel_name ,Video_Name , Comment_Count from video_table order by channel_name, Video_Name ")
             result = exe.fetchall()
             res = []
             for i in result:
@@ -258,9 +264,9 @@ def answers(data):
         
     if data == "Visualisation of videos that have the highest number of likes along their corresponding channel name.":
         try:
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select channel_name, Video_Name ,Like_count from video order by Like_count desc limit 15 ")
+            exe.execute("select channel_name, Video_Name ,Like_count from video_table order by Like_count desc limit 15 ")
             result = exe.fetchall()
             res = []
             for i in result:
@@ -271,9 +277,9 @@ def answers(data):
     
     if data == "Visualisation of total number of likes and dislikes for each video along with their corresponding video names":
         try:
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select Video_Name ,Like_count ,Dislike_count from video")
+            exe.execute("select Video_Name ,Like_count ,Dislike_count from video_table")
             result = exe.fetchall()
             res = []
             for i in result:
@@ -284,9 +290,9 @@ def answers(data):
     
     if data == "Visualisation of total number of views for each channel along with their corresponding channel names":
         try:
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select Channel_Name ,Channel_views from channel order by Channel_Name")
+            exe.execute("select Channel_Name ,Channel_views from channel_table order by Channel_Name")
             result = exe.fetchall()
             res = []
             for i in result:
@@ -297,9 +303,9 @@ def answers(data):
     
     if data == "Visualisation of names of all the channels that have published videos in the year 2022":
         try: 
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select distinct channel_name from video where Published_At like '2022%' ")
+            exe.execute("select distinct channel_name from video_table where Published_At like '2022%' ")
             result = exe.fetchall()
             res = []
             for i in result:
@@ -311,9 +317,9 @@ def answers(data):
     
     if data == "Visualisation of Average duration of all videos in each channel along with their corresponding channel name.":
         try:
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select channel_name , avg(video_duration) from video group by channel_name")
+            exe.execute("select channel_name , avg(video_duration) from video_table group by channel_name")
             result = exe.fetchall()
             res = []
             for i in result:
@@ -324,9 +330,9 @@ def answers(data):
     
     if data == "Visualisation of Videos that have highest number of comments and their corresponding channel name.":
         try:
-            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'guvi')
+            db = psycopg2.connect(host = 'localhost',user = 'postgres',password='Sandy@20',port = 5432,database = 'Youtube')
             exe = db.cursor()
-            exe.execute("select channel_name ,Video_Name ,Comment_Count from video order by Comment_Count desc limit 10 ")
+            exe.execute("select channel_name ,Video_Name ,Comment_Count from video_table order by Comment_Count desc limit 10 ")
             result = exe.fetchall()
             res = []
             for i in result:
