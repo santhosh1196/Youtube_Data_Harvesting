@@ -25,8 +25,10 @@ MongoDB
 
 Explanation To Do Execute The Project*
 
-Step 1: We will fetch data like Channel Id, Channel Name, Playlist, Video Id from the Youtube data API console.
-
+Step 1: We will fetch datas like Channel Details, Video Details, Comment Details from the Youtube data API console. 
+        the flow of getting data --> Channel Details -->Channel ID --> Playlist ID --> Video Ids --> Video Details of each video 
+                                                                                                 --> Comment Details of each video 
+                        
 Step2: Create a database in MongoDB to store the collected data as data lake.
 
 Step3: Migration of data from data lake to Postgresql for efficient querying and analysis by creating tables in SQL warehouse.
